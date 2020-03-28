@@ -16,7 +16,7 @@
 (def health-route ["/health" :health])
 (def metrics-route ["/metrics" :metrics])
 
-(defn build-routes [extras]
+(defn routes [extras]
   [""
    (concat
      [discovery-route
@@ -25,28 +25,28 @@
       metrics-route]
      extras)])
 
-(defn build-dependencies
-  ([] (build-dependencies []))
+(defn dependencies
+  ([] (dependencies []))
   ([extra-routes]
-   {:routes (build-routes extra-routes)}))
+   {:routes (routes extra-routes)}))
 
-(defn build-handler
-  ([dependencies] (build-handler dependencies {}))
+(defn handler
+  ([dependencies] (handler dependencies {}))
   ([dependencies options]
-   (let [handler (discovery-resource/build-resource-for dependencies options)
+   (let [handler (discovery-resource/resource-handler dependencies options)
          handler (-> handler
                    ring-keyword-params/wrap-keyword-params
                    ring-params/wrap-params)]
      handler)))
 
 (deftest has-status-200
-  (let [handler (build-handler (build-dependencies))
+  (let [handler (handler (dependencies))
         request (ring/request :get "/")
         result (handler request)]
     (is (= (:status result) 200))))
 
 (deftest includes-self-link
-  (let [handler (build-handler (build-dependencies))
+  (let [handler (handler (dependencies))
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
@@ -54,8 +54,8 @@
 
 (deftest includes-basic-link
   (let [route ["/thing" :thing]
-        handler (build-handler
-                  (build-dependencies [route])
+        handler (handler
+                  (dependencies [route])
                   {:links {:some-thing {:route-name :thing}}})
         request (ring/request :get "http://localhost/")
         result (handler request)
@@ -66,8 +66,8 @@
 
 (deftest includes-link-with-path-param
   (let [route [["/thing/" :path-param] :thing]
-        handler (build-handler
-                  (build-dependencies [route])
+        handler (handler
+                  (dependencies [route])
                   {:links {:some-thing
                            {:route-name  :thing
                             :path-params {:path-param 10}}}})
@@ -80,8 +80,8 @@
 
 (deftest includes-link-with-path-template-param
   (let [templated-route [["/thing/" :path-param] :thing]
-        handler (build-handler
-                  (build-dependencies [templated-route])
+        handler (handler
+                  (dependencies [templated-route])
                   {:links {:some-thing
                            {:route-name           :thing
                             :path-template-params {:path-param :param}}}})
@@ -94,8 +94,8 @@
 
 (deftest includes-link-with-query-param
   (let [route ["/thing" :thing]
-        handler (build-handler
-                  (build-dependencies [route])
+        handler (handler
+                  (dependencies [route])
                   {:links {:some-thing
                            {:route-name   :thing
                             :query-params {:query-param 10}}}})
@@ -108,8 +108,8 @@
 
 (deftest includes-link-with-query-template-param
   (let [templated-route ["/thing" :thing]
-        handler (build-handler
-                  (build-dependencies [templated-route])
+        handler (handler
+                  (dependencies [templated-route])
                   {:links {:some-thing
                            {:route-name            :thing
                             :query-template-params [:query-param]}}})
@@ -126,8 +126,8 @@
         route-3 [["/thing-3/" :param-2] :thing-3]
         route-4 ["/thing-4" :thing-4]
         route-5 ["/thing-5" :thing-5]
-        handler (build-handler
-                  (build-dependencies
+        handler (handler
+                  (dependencies
                     [route-1 route-2 route-3 route-4 route-5])
                   {:links {:some-thing-1
                            {:route-name :thing-1}
@@ -161,8 +161,8 @@
   (let [route-1 ["/thing-1" :thing-1]
         route-2 ["/thing-2" :thing-2]
         route-3 ["/thing-3" :thing-3]
-        handler (build-handler
-                  (build-dependencies [route-1 route-2 route-3])
+        handler (handler
+                  (dependencies [route-1 route-2 route-3])
                   {:links [:thing-1 :thing-2 :thing-3]})
         request (ring/request :get "http://localhost/")
         result (handler request)
@@ -175,7 +175,7 @@
           "http://localhost/thing-3"))))
 
 (deftest includes-ping-and-health-links-by-default
-  (let [handler (build-handler (build-dependencies))
+  (let [handler (handler (dependencies))
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
@@ -184,7 +184,7 @@
     (is (nil? (hal/get-link resource :metrics)))))
 
 (deftest includes-no-defaults-when-defaults-false
-  (let [handler (build-handler (build-dependencies)
+  (let [handler (handler (dependencies)
                   {:defaults false})
         request (ring/request :get "http://localhost/")
         result (handler request)
@@ -194,7 +194,7 @@
     (is (nil? (hal/get-link resource :metrics)))))
 
 (deftest includes-specified-defaults
-  (let [handler (build-handler (build-dependencies)
+  (let [handler (handler (dependencies)
                   {:defaults [:ping :metrics]})
         request (ring/request :get "http://localhost/")
         result (handler request)
@@ -205,7 +205,7 @@
 
 (deftest allows-defaults-to-be-overridden-globally
   (with-redefs [discovery-resource/*default-links* [:metrics :health]]
-    (let [handler (build-handler (build-dependencies))
+    (let [handler (handler (dependencies))
           request (ring/request :get "http://localhost/")
           result (handler request)
           resource (hal-json/json->resource (:body result))]
@@ -214,7 +214,7 @@
       (is (= (hal/get-href resource :metrics) "http://localhost/metrics")))))
 
 (deftest allows-defaults-to-be-specified-as-a-map
-  (let [handler (build-handler (build-dependencies)
+  (let [handler (handler (dependencies)
                   {:defaults {:lb-check {:route-name :ping}}})
         request (ring/request :get "http://localhost/")
         result (handler request)
@@ -224,7 +224,7 @@
 (deftest allows-global-defaults-to-be-specified-as-a-map
   (with-redefs [discovery-resource/*default-links*
                 {:lb-check {:route-name :ping}}]
-    (let [handler (build-handler (build-dependencies))
+    (let [handler (handler (dependencies))
           request (ring/request :get "http://localhost/")
           result (handler request)
           resource (hal-json/json->resource (:body result))]

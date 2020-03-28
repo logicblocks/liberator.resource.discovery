@@ -31,8 +31,8 @@
     (hal/add-link resource link-name
       (merge templated-map href-map))))
 
-(defn build-definitions-for
-  ([dependencies] (build-definitions-for dependencies {}))
+(defn definitions
+  ([dependencies] (definitions dependencies {}))
   ([{:keys [routes]}
     {:keys [links
             defaults]
@@ -51,11 +51,11 @@
                        resource links)]
         resource))}))
 
-(defn build-resource-for
-  ([dependencies] (build-resource-for dependencies {}))
+(defn resource-handler
+  ([dependencies] (resource-handler dependencies {}))
   ([dependencies options]
    (mixin/build-resource
      (json-mixin/with-json-mixin dependencies)
      (hypermedia-mixin/with-hypermedia-mixin dependencies)
      (hal-mixin/with-hal-mixin dependencies)
-     (build-definitions-for dependencies options))))
+     (definitions dependencies options))))
