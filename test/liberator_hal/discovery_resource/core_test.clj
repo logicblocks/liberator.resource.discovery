@@ -32,6 +32,13 @@
 
 (deftest has-status-200
   (let [handler (build-handler dependencies)
-        request (ring/request :get "/ping")
+        request (ring/request :get "/")
         result (handler request)]
     (is (= (:status result) 200))))
+
+(deftest includes-self-link
+  (let [handler (build-handler dependencies)
+        request (ring/request :get "http://localhost/")
+        result (handler request)
+        resource (hal-json/json->resource (:body result))]
+    (is (= (hal/get-href resource :self) "http://localhost/"))))
