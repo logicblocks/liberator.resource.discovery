@@ -7,6 +7,17 @@
    [liberator-mixin.hypermedia.core :as hypermedia-mixin]
    [liberator-mixin.hal.core :as hal-mixin]))
 
+(def ^:dynamic *default-links* [:ping :health])
+
+(defn- normalise-links
+  [links]
+  (letfn [(->link-definition [l link-name]
+            (merge l {link-name {:route-name link-name}}))]
+    (cond
+      (false? links) {}
+      (map? links) links
+      :else (reduce ->link-definition {} links))))
+
 (defn- add-link
   [resource request routes link-name
    {:keys [route-name] :as options}]
@@ -23,11 +34,16 @@
 (defn build-definitions-for
   ([dependencies] (build-definitions-for dependencies {}))
   ([{:keys [routes]}
-    {:keys [links]
-     :or   {}}]
+    {:keys [links
+            defaults]
+     :or   {links    {}
+            defaults *default-links*}}]
    {:handle-ok
     (fn [{:keys [request]}]
-      (let [resource (hal/new-resource
+      (let [links (merge
+                    (normalise-links defaults)
+                    (normalise-links links))
+            resource (hal/new-resource
                        (hype/absolute-url-for request routes :discovery))
             resource (reduce
                        (fn [r [name options]]
