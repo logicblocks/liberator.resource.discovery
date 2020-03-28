@@ -33,7 +33,7 @@
 (defn resource-handler
   ([dependencies] (resource-handler dependencies {}))
   ([dependencies options]
-   (let [handler (discovery-resource/resource-handler dependencies options)
+   (let [handler (discovery-resource/handler dependencies options)
          handler (-> handler
                    ring-keyword-params/wrap-keyword-params
                    ring-params/wrap-params)]

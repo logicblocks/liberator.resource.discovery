@@ -51,8 +51,8 @@
                        resource links)]
         resource))}))
 
-(defn resource-handler
-  ([dependencies] (resource-handler dependencies {}))
+(defn handler
+  ([dependencies] (handler dependencies {}))
   ([dependencies options]
    (mixin/build-resource
      (json-mixin/with-json-mixin dependencies)
