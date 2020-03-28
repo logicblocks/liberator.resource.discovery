@@ -7,6 +7,19 @@
     [liberator-mixin.hypermedia.core :as hypermedia-mixin]
     [liberator-mixin.hal.core :as hal-mixin]))
 
+(defn- add-link
+  [resource request routes name
+   {:keys [route-name] :as options}]
+  (let [params (dissoc options :route-name)
+        templated? (or
+                     (contains? params :path-template-params)
+                     (contains? params :query-template-params))
+        href (hype/absolute-url-for request routes route-name params)
+        templated-map (if templated? {:templated true} {})
+        href-map {:href href}]
+    (hal/add-link resource name
+      (merge templated-map href-map))))
+
 (defn build-definitions-for
   ([dependencies] (build-definitions-for dependencies {}))
   ([{:keys [routes]}
@@ -18,11 +31,8 @@
                        (hype/absolute-url-for request routes :discovery))
             resource (reduce
                        (fn [r [name options]]
-                         (hal/add-link r name
-                           (hype/absolute-url-for request routes
-                             (:route-name options))))
-                       resource
-                       links)]
+                         (add-link r request routes name options))
+                       resource links)]
         resource))}))
 
 (defn build-resource-for
