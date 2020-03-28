@@ -10,13 +10,20 @@
 (defn build-definitions-for
   ([dependencies] (build-definitions-for dependencies {}))
   ([{:keys [routes]}
-    {:keys [definitions]
-     :or {}}]
+    {:keys [links]
+     :or   {}}]
    {:handle-ok
     (fn [{:keys [request]}]
-      (hal/add-properties
-        (hal/new-resource
-          (hype/absolute-url-for request routes :discovery))))}))
+      (let [resource (hal/new-resource
+                       (hype/absolute-url-for request routes :discovery))
+            resource (reduce
+                       (fn [r [name options]]
+                         (hal/add-link r name
+                           (hype/absolute-url-for request routes
+                             (:route-name options))))
+                       resource
+                       links)]
+        resource))}))
 
 (defn build-resource-for
   ([dependencies] (build-resource-for dependencies {}))
