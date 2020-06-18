@@ -33,11 +33,9 @@
 (defn resource-handler
   ([dependencies] (resource-handler dependencies {}))
   ([dependencies options]
-   (let [handler (discovery-resource/handler dependencies options)
-         handler (-> handler
-                   ring-keyword-params/wrap-keyword-params
-                   ring-params/wrap-params)]
-     handler)))
+   (-> (discovery-resource/handler dependencies options)
+     ring-keyword-params/wrap-keyword-params
+     ring-params/wrap-params)))
 
 (deftest has-status-200
   (let [handler (resource-handler (dependencies))
