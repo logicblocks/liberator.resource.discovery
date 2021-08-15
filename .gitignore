@@ -8,6 +8,7 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+/run
 .hgignore
 .hg/
 *.iml
@@ -16,3 +17,4 @@ pom.xml.asc
 .DS_Store
 /vendor
 .eastwood
+/.idea
