@@ -1,6 +1,6 @@
-(ns liberator-hal.discovery-resource.core-test
+(ns liberator.resource.discovery.core-test
   (:require
-   [clojure.test :refer :all]
+   [clojure.test :refer [deftest is]]
 
    [halboy.resource :as hal]
    [halboy.json :as hal-json]
@@ -9,7 +9,7 @@
    [ring.middleware.keyword-params :as ring-keyword-params]
    [ring.middleware.params :as ring-params]
 
-   [liberator-hal.discovery-resource.core :as discovery-resource]))
+   [liberator.resource.discovery.core :as discovery-resource]))
 
 (def discovery-route ["/" :discovery])
 (def ping-route ["/ping" :ping])

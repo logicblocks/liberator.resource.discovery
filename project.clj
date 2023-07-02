@@ -1,13 +1,13 @@
-(defproject io.logicblocks/liberator-hal.discovery-resource "0.1.1-RC4"
-  :description "A HAL discovery resource for liberator"
-  :url "https://github.com/logicblocks/liberator-hal.discovery-resource"
+(defproject io.logicblocks/liberator.resource.discovery "0.1.1-RC4"
+  :description "A discovery resource for liberator"
+  :url "https://github.com/logicblocks/liberator.resource.discovery"
 
   :license {:name "The MIT License"
             :url  "https://opensource.org/licenses/MIT"}
 
-  :dependencies [[halboy "5.1.0"]
-                 [b-social/hype "1.0.0"]
-                 [b-social/liberator-mixin "0.0.48"]]
+  :dependencies [[io.logicblocks/halboy "6.0.0"]
+                 [io.logicblocks/hype "2.0.0"]
+                 [io.logicblocks/liberator.mixin "0.1.0-RC3"]]
 
   :plugins [[lein-cloverage "1.1.2"]
             [lein-shell "0.5.0"]
@@ -63,11 +63,11 @@
   {:ns-exclude-regex [#"^user"]}
 
   :codox
-  {:namespaces  [#"^liberator-hal.discovery-resource\."]
+  {:namespaces  [#"^liberator\.resource\.discovery\."]
    :metadata    {:doc/format :markdown}
    :output-path "docs"
    :doc-paths   ["docs"]
-   :source-uri  "https://github.com/logicblocks/liberator-hal.discovery-resource/blob/{version}/{filepath}#L{line}"}
+   :source-uri  "https://github.com/logicblocks/liberator.resource.discovery/blob/{version}/{filepath}#L{line}"}
 
   :cljfmt {:indents ^:replace {#".*" [[:inner 0]]}}
 
