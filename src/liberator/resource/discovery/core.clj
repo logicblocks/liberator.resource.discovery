@@ -19,13 +19,13 @@
       :else (reduce ->link-definition {} links))))
 
 (defn- add-link
-  [resource request routes link-name
+  [resource request router link-name
    {:keys [route-name] :as options}]
   (let [params (dissoc options :route-name)
         templated? (or
                      (contains? params :path-template-params)
                      (contains? params :query-template-params))
-        href (hype/absolute-url-for request routes route-name params)
+        href (hype/absolute-url-for request router route-name params)
         templated-map (if templated? {:templated true} {})
         href-map {:href href}]
     (hal/add-link resource link-name
@@ -33,7 +33,7 @@
 
 (defn definitions
   ([dependencies] (definitions dependencies {}))
-  ([{:keys [routes]}
+  ([{:keys [router]}
     {:keys [links
             defaults]
      :or   {links    {}
@@ -44,10 +44,10 @@
                     (normalise-links defaults)
                     (normalise-links links))
             resource (hal/new-resource
-                       (hype/absolute-url-for request routes :discovery))
+                       (hype/absolute-url-for request router :discovery))
             resource (reduce
                        (fn [r [name options]]
-                         (add-link r request routes name options))
+                         (add-link r request router name options))
                        resource links)]
         resource))}))
 

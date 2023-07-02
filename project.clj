@@ -1,5 +1,5 @@
 (defproject io.logicblocks/liberator.resource.discovery "0.1.1-RC4"
-  :description "A discovery resource for liberator"
+  :description "A discovery resource for liberator."
   :url "https://github.com/logicblocks/liberator.resource.discovery"
 
   :license {:name "The MIT License"
@@ -9,29 +9,35 @@
                  [io.logicblocks/hype "2.0.0"]
                  [io.logicblocks/liberator.mixin "0.1.0-RC3"]]
 
-  :plugins [[lein-cloverage "1.1.2"]
+  :plugins [[lein-cloverage "1.2.4"]
             [lein-shell "0.5.0"]
-            [lein-ancient "0.6.15"]
+            [lein-ancient "0.7.0"]
             [lein-changelog "0.3.2"]
-            [lein-eftest "0.5.9"]
-            [lein-codox "0.10.7"]
-            [lein-cljfmt "0.6.7"]
+            [lein-cprint "1.3.3"]
+            [lein-eftest "0.6.0"]
+            [lein-codox "0.10.8"]
+            [lein-cljfmt "0.9.2"]
             [lein-kibit "0.1.8"]
             [lein-bikeshed "0.5.2"]
-            [jonase/eastwood "0.3.11"]]
+            [jonase/eastwood "1.4.0"]]
 
   :profiles
   {:shared
-   {:dependencies [[org.clojure/clojure "1.10.1"]
-                   [ring/ring-core "1.8.0"]
+   {:dependencies [[org.clojure/clojure "1.11.1"]
+
+                   [ring/ring-core "1.10.0"]
                    [ring/ring-mock "0.4.0"]
-                   [nrepl "0.6.0"]
-                   [eftest "0.5.9"]]}
+
+                   [nrepl "1.0.0"]
+                   [eftest "0.6.0"]]}
+
    :dev
    [:shared {:source-paths ["dev"]
              :eftest       {:multithread? false}}]
+
    :test
    [:shared {:eftest {:multithread? false}}]
+
    :prerelease
    {:release-tasks
     [["shell" "git" "diff" "--exit-code"]
@@ -40,6 +46,7 @@
      ["vcs" "commit" "Pre-release version %s [skip ci]"]
      ["vcs" "tag"]
      ["deploy"]]}
+
    :release
    {:release-tasks
     [["shell" "git" "diff" "--exit-code"]
@@ -58,6 +65,8 @@
      ["vcs" "commit" "Pre-release version %s [skip ci]"]
      ["vcs" "tag"]
      ["vcs" "push"]]}}
+
+  :target-path "target/%s/"
 
   :cloverage
   {:ns-exclude-regex [#"^user"]}

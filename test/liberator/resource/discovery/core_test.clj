@@ -16,7 +16,7 @@
 (def health-route ["/health" :health])
 (def metrics-route ["/metrics" :metrics])
 
-(defn routes [extras]
+(defn router [extras]
   [""
    (concat
      [discovery-route
@@ -28,7 +28,7 @@
 (defn dependencies
   ([] (dependencies []))
   ([extra-routes]
-   {:routes (routes extra-routes)}))
+   {:router (router extra-routes)}))
 
 (defn resource-handler
   ([dependencies] (resource-handler dependencies {}))
@@ -41,14 +41,14 @@
   (let [handler (resource-handler (dependencies))
         request (ring/request :get "/")
         result (handler request)]
-    (is (= (:status result) 200))))
+    (is (= 200 (:status result)))))
 
 (deftest includes-self-link
   (let [handler (resource-handler (dependencies))
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
-    (is (= (hal/get-href resource :self) "http://localhost/"))))
+    (is (= "http://localhost/" (hal/get-href resource :self)))))
 
 (deftest includes-basic-link
   (let [route ["/thing" :thing]
@@ -60,7 +60,7 @@
         resource (hal-json/json->resource (:body result))
         link (hal/get-link resource :someThing)]
     (is (nil? (:templated link)))
-    (is (= (:href link) "http://localhost/thing"))))
+    (is (= "http://localhost/thing" (:href link)))))
 
 (deftest includes-link-with-path-param
   (let [route [["/thing/" :path-param] :thing]
@@ -74,7 +74,7 @@
         resource (hal-json/json->resource (:body result))
         link (hal/get-link resource :someThing)]
     (is (nil? (:templated link)))
-    (is (= (:href link) "http://localhost/thing/10"))))
+    (is (= "http://localhost/thing/10" (:href link)))))
 
 (deftest includes-link-with-path-template-param
   (let [templated-route [["/thing/" :path-param] :thing]
@@ -88,7 +88,7 @@
         resource (hal-json/json->resource (:body result))
         link (hal/get-link resource :someThing)]
     (is (true? (:templated link)))
-    (is (= (:href link) "http://localhost/thing/{param}"))))
+    (is (= "http://localhost/thing/{param}" (:href link)))))
 
 (deftest includes-link-with-query-param
   (let [route ["/thing" :thing]
@@ -102,7 +102,7 @@
         resource (hal-json/json->resource (:body result))
         link (hal/get-link resource :someThing)]
     (is (nil? (:templated link)))
-    (is (= (:href link) "http://localhost/thing?queryParam=10"))))
+    (is (= "http://localhost/thing?queryParam=10" (:href link)))))
 
 (deftest includes-link-with-query-template-param
   (let [templated-route ["/thing" :thing]
@@ -116,7 +116,7 @@
         resource (hal-json/json->resource (:body result))
         link (hal/get-link resource :someThing)]
     (is (true? (:templated link)))
-    (is (= (:href link) "http://localhost/thing{?queryParam}"))))
+    (is (= "http://localhost/thing{?queryParam}" (:href link)))))
 
 (deftest includes-all-specified-links
   (let [route-1 ["/thing-1" :thing-1]
@@ -144,16 +144,16 @@
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
-    (is (= (hal/get-href resource :someThing1)
-          "http://localhost/thing-1"))
-    (is (= (hal/get-href resource :someThing2)
-          "http://localhost/thing-2/20"))
-    (is (= (hal/get-href resource :someThing3)
-          "http://localhost/thing-3/{param}"))
-    (is (= (hal/get-href resource :someThing4)
-          "http://localhost/thing-4?queryParam=30"))
-    (is (= (hal/get-href resource :someThing5)
-          "http://localhost/thing-5{?queryParam}"))))
+    (is (= "http://localhost/thing-1"
+          (hal/get-href resource :someThing1)))
+    (is (= "http://localhost/thing-2/20"
+          (hal/get-href resource :someThing2)))
+    (is (= "http://localhost/thing-3/{param}"
+          (hal/get-href resource :someThing3)))
+    (is (= "http://localhost/thing-4?queryParam=30"
+          (hal/get-href resource :someThing4)))
+    (is (= "http://localhost/thing-5{?queryParam}"
+          (hal/get-href resource :someThing5)))))
 
 (deftest allows-links-to-be-specified-as-a-vector
   (let [route-1 ["/thing-1" :thing-1]
@@ -165,20 +165,20 @@
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
-    (is (= (hal/get-href resource :thing1)
-          "http://localhost/thing-1"))
-    (is (= (hal/get-href resource :thing2)
-          "http://localhost/thing-2"))
-    (is (= (hal/get-href resource :thing3)
-          "http://localhost/thing-3"))))
+    (is (= "http://localhost/thing-1"
+          (hal/get-href resource :thing1)))
+    (is (= "http://localhost/thing-2"
+          (hal/get-href resource :thing2)))
+    (is (= "http://localhost/thing-3"
+          (hal/get-href resource :thing3)))))
 
 (deftest includes-ping-and-health-links-by-default
   (let [handler (resource-handler (dependencies))
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
-    (is (= (hal/get-href resource :ping) "http://localhost/ping"))
-    (is (= (hal/get-href resource :health) "http://localhost/health"))
+    (is (= "http://localhost/ping" (hal/get-href resource :ping)))
+    (is (= "http://localhost/health" (hal/get-href resource :health)))
     (is (nil? (hal/get-link resource :metrics)))))
 
 (deftest includes-no-defaults-when-defaults-false
@@ -197,8 +197,8 @@
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
-    (is (= (hal/get-href resource :ping) "http://localhost/ping"))
-    (is (= (hal/get-href resource :metrics) "http://localhost/metrics"))
+    (is (= "http://localhost/ping" (hal/get-href resource :ping)))
+    (is (= "http://localhost/metrics" (hal/get-href resource :metrics)))
     (is (nil? (hal/get-link resource :health)))))
 
 (deftest allows-defaults-to-be-overridden-globally
@@ -208,8 +208,8 @@
           result (handler request)
           resource (hal-json/json->resource (:body result))]
       (is (nil? (hal/get-link resource :ping)))
-      (is (= (hal/get-href resource :health) "http://localhost/health"))
-      (is (= (hal/get-href resource :metrics) "http://localhost/metrics")))))
+      (is (= "http://localhost/health" (hal/get-href resource :health)))
+      (is (= "http://localhost/metrics" (hal/get-href resource :metrics))))))
 
 (deftest allows-defaults-to-be-specified-as-a-map
   (let [handler (resource-handler (dependencies)
@@ -217,7 +217,7 @@
         request (ring/request :get "http://localhost/")
         result (handler request)
         resource (hal-json/json->resource (:body result))]
-    (is (= (hal/get-href resource :lbCheck) "http://localhost/ping"))))
+    (is (= "http://localhost/ping" (hal/get-href resource :lbCheck)))))
 
 (deftest allows-global-defaults-to-be-specified-as-a-map
   (with-redefs [discovery-resource/*default-links*
@@ -226,4 +226,4 @@
           request (ring/request :get "http://localhost/")
           result (handler request)
           resource (hal-json/json->resource (:body result))]
-      (is (= (hal/get-href resource :lbCheck) "http://localhost/ping")))))
+      (is (= "http://localhost/ping" (hal/get-href resource :lbCheck))))))
