@@ -7,55 +7,77 @@
    [liberator.mixin.hypermedia.core :as hypermedia-mixin]
    [liberator.mixin.hal.core :as hal-mixin]))
 
-(def ^:dynamic *default-links* [:ping :health])
+(defn- link-definition-fn
+  [link-name link-definition]
+  (let [route-name (:route-name link-definition)
+        params (dissoc link-definition :route-name)
+        templated?
+        (or
+          (contains? params :path-template-params)
+          (contains? params :query-template-params))
+        templated-map
+        (if templated? {:templated true} {})]
+    (fn [{:keys [request router]}]
+      {link-name
+       (merge templated-map
+         {:href
+          (hype/absolute-url-for request router route-name params)})})))
 
-(defn- normalise-links
-  [links]
-  (letfn [(->link-definition [l link-name]
-            (merge l {link-name {:route-name link-name}}))]
-    (cond
-      (false? links) {}
-      (map? links) links
-      :else (reduce ->link-definition {} links))))
+(defn- link-definition-fns
+  [link-definitions]
+  (let [link-definitions
+        (if (map? link-definitions)
+          (mapv
+            (fn [[link-name link-definition]]
+              (merge {:link-name link-name} link-definition))
+            link-definitions)
+          link-definitions)]
+    (mapv
+      (fn [link-definition]
+        (cond
+          (map? link-definition)
+          (link-definition-fn
+            (get link-definition :link-name
+              (get link-definition :route-name))
+            link-definition)
 
-(defn- add-link
-  [resource request router link-name
-   {:keys [route-name] :as options}]
-  (let [params (dissoc options :route-name)
-        templated? (or
-                     (contains? params :path-template-params)
-                     (contains? params :query-template-params))
-        href (hype/absolute-url-for request router route-name params)
-        templated-map (if templated? {:templated true} {})
-        href-map {:href href}]
-    (hal/add-link resource link-name
-      (merge templated-map href-map))))
+          (keyword? link-definition)
+          (link-definition-fn
+            link-definition
+            {:route-name link-definition})
+
+          :else link-definition))
+      link-definitions)))
 
 (defn definitions
-  ([dependencies] (definitions dependencies {}))
-  ([{:keys [router]}
-    {:keys [links
-            defaults]
-     :or   {links    {}
-            defaults *default-links*}}]
-   {:handle-ok
-    (fn [{:keys [request]}]
-      (let [links (merge
-                    (normalise-links defaults)
-                    (normalise-links links))
-            resource (hal/new-resource
-                       (hype/absolute-url-for request router :discovery))
-            resource (reduce
-                       (fn [r [name options]]
-                         (add-link r request router name options))
-                       resource links)]
-        resource))}))
+  ([_]
+   {:link-definitions {}
+
+    :self
+    (fn [{:keys [request router]}]
+      (hype/absolute-url-for request router :discovery))
+
+    :handle-ok
+    (fn [{:keys [resource] :as context}]
+      (let [link-definitions-fn (:link-definitions resource)
+            link-definitions (link-definitions-fn context)
+            link-definitions (link-definition-fns link-definitions)
+
+            self-link-fn (:self resource)
+            self-link (self-link-fn context)
+
+            link-maps (mapv #(% context) link-definitions)
+            links (apply merge link-maps)]
+        (cond-> (hal/new-resource self-link)
+          (some? links)
+          (hal/add-links links))))}))
 
 (defn handler
   ([dependencies] (handler dependencies {}))
-  ([dependencies options]
+  ([dependencies overrides]
    (mixin/build-resource
      (json-mixin/with-json-mixin dependencies)
      (hypermedia-mixin/with-hypermedia-mixin dependencies)
      (hal-mixin/with-hal-mixin dependencies)
-     (definitions dependencies options))))
+     (definitions dependencies)
+     overrides)))
