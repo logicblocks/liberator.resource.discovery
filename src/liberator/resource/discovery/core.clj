@@ -2,7 +2,8 @@
   (:require
    [halboy.resource :as hal]
    [hype.core :as hype]
-   [liberator.mixin.core :as mixin]
+   [liberator.mixin.core :as lm-core]
+   [liberator.mixin.util :as lm-util]
    [liberator.mixin.json.core :as json-mixin]
    [liberator.mixin.hypermedia.core :as hypermedia-mixin]
    [liberator.mixin.hal.core :as hal-mixin]))
@@ -53,18 +54,17 @@
   ([_]
    {:link-definitions {}
 
-    :self
+    :self-link
     (fn [{:keys [request router]}]
       (hype/absolute-url-for request router :discovery))
 
     :handle-ok
-    (fn [{:keys [resource] :as context}]
-      (let [link-definitions-fn (:link-definitions resource)
-            link-definitions (link-definitions-fn context)
-            link-definitions (link-definition-fns link-definitions)
+    (fn [context]
+      (let [self-link (lm-util/resource-attribute-as-value context :self-link)
 
-            self-link-fn (:self resource)
-            self-link (self-link-fn context)
+            link-definitions
+            (lm-util/resource-attribute-as-value context :link-definitions)
+            link-definitions (link-definition-fns link-definitions)
 
             link-maps (mapv #(% context) link-definitions)
             links (apply merge link-maps)]
@@ -75,7 +75,7 @@
 (defn handler
   ([dependencies] (handler dependencies {}))
   ([dependencies overrides]
-   (mixin/build-resource
+   (lm-core/build-resource
      (json-mixin/with-json-mixin dependencies)
      (hypermedia-mixin/with-hypermedia-mixin dependencies)
      (hal-mixin/with-hal-mixin dependencies)
