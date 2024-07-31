@@ -1,4 +1,4 @@
-(defproject io.logicblocks/liberator.resource.discovery "0.2.0-RC3"
+(defproject io.logicblocks/liberator.resource.discovery "0.2.0-RC4"
   :description "A discovery resource for liberator."
   :url "https://github.com/logicblocks/liberator.resource.discovery"
 
